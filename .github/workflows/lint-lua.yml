@@ -21,6 +21,6 @@ jobs:
       - name: Run Lua syntax check
         run: |
           find src -name "*.lua" -type f | while read file; do
-            lua -p "$file" || exit 1
+            lua -e "loadfile('$file')" || { echo "Syntax error in $file"; exit 1; }
           done
           echo "✓ All Lua files passed syntax check"

@@ -1,0 +1,2 @@
+-- Airport Inc - Default Tool
+-- Tool given to players on spawn

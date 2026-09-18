@@ -1,0 +1,35 @@
+{
+  "name": "Airport Inc",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$path": "src/ServerScriptService"
+    },
+    "ServerStorage": {
+      "$path": "src/ServerStorage"
+    },
+    "ReplicatedStorage": {
+      "$path": "src/ReplicatedStorage"
+    },
+    "ReplicatedFirst": {
+      "$path": "src/ReplicatedFirst"
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      },
+      "StarterCharacterScripts": {
+        "$path": "src/StarterPlayer/StarterCharacterScripts"
+      }
+    },
+    "StarterGui": {
+      "$path": "src/StarterGui"
+    },
+    "StarterPack": {
+      "$path": "src/StarterPack"
+    },
+    "SoundService": {
+      "$path": "src/SoundService"
+    }
+  }
+}

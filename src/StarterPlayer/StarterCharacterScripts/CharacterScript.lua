@@ -1,0 +1,2 @@
+-- Airport Inc - Character Script
+-- Runs when a character spawns

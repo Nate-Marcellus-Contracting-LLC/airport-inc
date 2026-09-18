@@ -1,0 +1,17 @@
+# Roblox
+*.rbxl
+*.rbxm
+*.place
+*.model
+*.bundle
+
+# Node modules
+node_modules/
+package-lock.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

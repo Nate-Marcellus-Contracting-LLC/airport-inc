@@ -1,0 +1,108 @@
+name: Project Structure Checks
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  structure-check:
+    name: Check Project Structure
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Verify default.project.json
+        run: |
+          # Validate JSON syntax
+          python3 -c "import json; json.load(open('default.project.json'))" || exit 1
+          echo "✓ default.project.json is valid JSON"
+          
+          # Check required keys exist
+          python3 -c "
+import json
+import sys
+
+with open('default.project.json') as f:
+    data = json.load(f)
+
+required = ['name', 'tree']
+if not all(k in data for k in required):
+    print('✗ Missing required keys in default.project.json')
+    sys.exit(1)
+
+tree = data['tree']
+required_services = ['ServerScriptService', 'ReplicatedStorage', 'StarterPlayer', 'StarterGui', 'StarterPack', 'SoundService']
+if not all(k in tree for k in required_services):
+    print('✗ Missing required services in default.project.json')
+    sys.exit(1)
+
+print('✓ default.project.json has all required services')
+"
+      
+      - name: Verify source directory structure
+        run: |
+          REQUIRED_DIRS=(
+            "src/ServerScriptService"
+            "src/ServerStorage"
+            "src/ReplicatedStorage"
+            "src/ReplicatedFirst"
+            "src/StarterPlayer/StarterPlayerScripts"
+            "src/StarterPlayer/StarterCharacterScripts"
+            "src/StarterGui"
+            "src/StarterPack"
+            "src/SoundService"
+          )
+          
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "✗ Missing required directory: $dir"
+              exit 1
+            fi
+            echo "✓ $dir exists"
+          done
+      
+      - name: Check Lua files exist
+        run: |
+          REQUIRED_FILES=(
+            "src/ServerScriptService/Main.server.lua"
+            "src/ReplicatedStorage/ReplicatedModule.lua"
+            "src/StarterPlayer/StarterPlayerScripts/PlayerScript.client.lua"
+            "src/StarterPlayer/StarterCharacterScripts/CharacterScript.lua"
+            "src/StarterGui/MainGui.lua"
+            "src/ReplicatedFirst/Preload.lua"
+            "src/ServerStorage/ServerStorage.lua"
+            "src/StarterPack/DefaultTool.lua"
+            "src/SoundService/Sounds.lua"
+          )
+          
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "✗ Missing required file: $file"
+              exit 1
+            fi
+            echo "✓ $file exists"
+          done
+      
+      - name: Check no Windows line endings
+        run: |
+          if grep -rP "\r\n" src/ --include="*.lua" 2>/dev/null; then
+            echo "✗ Found Windows line endings (CRLF) in Lua files"
+            exit 1
+          fi
+          echo "✓ No Windows line endings found"
+      
+      - name: Check .gitignore includes required patterns
+        run: |
+          REQUIRED_IGNORES=("node_modules/" ".DS_Store" "*.rbxl" "*.rbxm")
+          for pattern in "${REQUIRED_IGNORES[@]}"; do
+            if grep -q "$pattern" .gitignore; then
+              echo "✓ $pattern is in .gitignore"
+            else
+              echo "✗ Missing from .gitignore: $pattern"
+              exit 1
+            fi
+          done

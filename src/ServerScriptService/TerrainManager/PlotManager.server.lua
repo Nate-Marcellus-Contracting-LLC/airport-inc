@@ -19,10 +19,9 @@ local PlotGrid = {} -- 2D grid of occupied plots
 
 -- Initialize plot grid
 local function InitPlotGrid()
-    local center = -(MAX_PLAYERS // 2) * PLOT_OFFSET
-    for y = 0, MAX_PLAYERS - 1 do
+    for y = 0, MAX_PLAYERS // 2 - 1 do
         PlotGrid[y] = {}
-        for x = 0, MAX_PLAY_M - 1 do
+        for x = 0, MAX_PLAYERS // 2 - 1 do
             PlotGrid[y][x] = nil
         end
     end
@@ -30,13 +29,14 @@ end
 
 -- Get plot position based on player index
 local function GetPlotPosition(playerIndex)
-    local x = playerIndex % (MAX_PLAYERS // 2)
-    local y = playerIndex // (MAX_PLAYERS // 2)
+    local plotsPerRow = MAX_PLAYERS // 2
+    local x = playerIndex % plotsPerRow
+    local y = playerIndex // plotsPerRow
     return Vector3.new(
-        x * PLOT_OFFSET - (MAX_PLAYERS // 2) * PLOT_OFFSET / 2,
+        x * PLOT_SIZE - (plotsPerRow - 1) * PLOT_SIZE / 2,
         0,
-        y * PLOT_OFFSET - (MAX_PLAYERS // 2) * PLOT_OFFSET / 2
-    )
+        y * PLOT_SIZE - (plotsPerRow - 1) * PLOT_SIZE / 2
+    ), x, y
 end
 
 -- Create a single plot mesh
@@ -96,9 +96,11 @@ local function OnPlayerAdded(player)
     }
     
     -- Create the plot
-    local plotData = CreatePlot(Plots[player.UserId].Position)
+    local position, x, y = GetPlotPosition(playerIndex - 1)
+    Plots[player.UserId].Position = position
+    local plotData = CreatePlot(position)
     Plots[player.UserId].PlotData = plotData
-    PlotGrid[plotData.x][plotData.y] = player.UserId
+    PlotGrid[x][y] = player.UserId
     
     -- Teleport player to their plot
     player.CharacterAdded:Connect(function(character)

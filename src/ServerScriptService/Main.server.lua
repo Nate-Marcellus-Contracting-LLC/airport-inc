@@ -2,9 +2,9 @@
 print("Airport Inc server starting...")
 
 -- Load terrain manager
-require(script.Parent.Parent.ReplicatedStorage.TerrainConfig)
-require(script:FindFirstChild("TerrainManager") or script)
+local terrainManager = require(script.TerrainManager.PlotManager)
 
 -- Initialize game systems
 print("Initializing Airport Inc game systems...")
+print(string.format("Terrain manager ready with %d slots", #terrainManager))
 

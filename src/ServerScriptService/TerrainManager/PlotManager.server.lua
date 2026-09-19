@@ -7,9 +7,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 -- Configuration
-local PLOT_SIZE = 100 -- studs
-local PLOT_HEIGHT = 1 -- thin layer
-local PLOT_OFFSET = 5 -- spacing between plots
+local PLOT_SIZE = 200 -- studs (huge left-to-right)
+local PLOT_HEIGHT = 2 -- thicker layer
+local PLOT_OFFSET = 220 -- spacing between plots (size + buffer)
 local MAX_PLAYERS = 16
 local TERRAIN_MATERIAL = Enum.Material.Grass
 
@@ -28,35 +28,35 @@ local function InitPlotGrid()
 end
 
 -- Get plot position based on player index
+-- Grid: 4 wide x 4 tall (VERTICAL orientation - up/down is longest)
 local function GetPlotPosition(playerIndex)
-    local plotsPerRow = MAX_PLAYERS // 2
+    local plotsPerRow = 4  -- 4 plots across (left-right)
+    local plotsPerCol = MAX_PLAYERS // plotsPerRow  -- 4 plots down (up-down)
     local x = playerIndex % plotsPerRow
     local y = playerIndex // plotsPerRow
+    
+    -- Center the grid
+    local gridWidth = plotsPerRow * PLOT_OFFSET
+    local gridHeight = plotsPerCol * PLOT_OFFSET
+    
     return Vector3.new(
-        x * PLOT_SIZE - (plotsPerRow - 1) * PLOT_SIZE / 2,
+        x * PLOT_OFFSET - gridWidth / 2 + PLOT_SIZE / 2,
         0,
-        y * PLOT_SIZE - (plotsPerRow - 1) * PLOT_SIZE / 2
+        y * PLOT_OFFSET - gridHeight / 2 + PLOT_SIZE / 2
     ), x, y
 end
 
 -- Create a single plot mesh
 local function CreatePlot(position)
+    -- Collision part - this is what players stand on
     local plot = Instance.new("Part")
     plot.Name = "PlayerPlot"
     plot.Anchored = true
-    plot.CanCollide = false
-    plot.Transparency = 1 -- invisible collision surface
+    plot.CanCollide = true  -- Enable collision so players don't phase through
     plot.Size = Vector3.new(PLOT_SIZE, PLOT_HEIGHT, PLOT_SIZE)
     plot.Position = position
-    
-    -- Add visible grass surface on top
-    local grass = Instance.new("Part")
-    grass.Name = "GrassSurface"
-    grass.Anchored = true
-    grass.CanCollide = false
-    grass.Size = Vector3.new(PLOT_SIZE + 0.5, 0.5, PLOT_SIZE + 0.5)
-    grass.Position = position + Vector3.new(0, PLOT_HEIGHT / 2, 0)
-    grass.Color = Color3.fromRGB(50, 180, 50)
+    plot.Material = Enum.Material.Grass
+    plot.Color = Color3.fromRGB(50, 180, 50)
     
     -- Add boundary markers (subtle)
     local boundary = Instance.new("Part")
@@ -71,12 +71,10 @@ local function CreatePlot(position)
     
     -- Parent to workspace
     plot.Parent = workspace
-    grass.Parent = workspace
     boundary.Parent = workspace
     
     return {
         Plot = plot,
-        Grass = grass,
         Boundary = boundary
     }
 end
@@ -104,15 +102,17 @@ local function OnPlayerAdded(player)
     
     -- Teleport player to their plot
     player.CharacterAdded:Connect(function(character)
-        task.wait(1) -- Wait for character to load
+        task.wait(0.5) -- Wait for character to load
         if character and Plots[player.UserId] then
             local humanoid = character:FindFirstChild("Humanoid")
             if humanoid then
-                humanoid.RootPart.CFrame = CFrame.new(
+                -- Spawn directly on the plot surface
+                local spawnY = Plots[player.UserId].Position.Y + PLOT_HEIGHT / 2 + 2
+                character:SetPrimaryPartCFrame(CFrame.new(
                     Plots[player.UserId].Position.X,
-                    Plots[player.UserId].Position.Y + 10,
+                    spawnY,
                     Plots[player.UserId].Position.Z
-                )
+                ))
             end
         end
     end)
@@ -126,7 +126,6 @@ local function OnPlayerRemoving(player)
         local plotData = Plots[player.UserId].PlotData
         if plotData then
             plotData.Plot:Destroy()
-            plotData.Grass:Destroy()
             plotData.Boundary:Destroy()
         end
         Plots[player.UserId] = nil
